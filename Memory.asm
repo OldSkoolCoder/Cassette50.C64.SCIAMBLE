@@ -11,3 +11,15 @@
 .label BottomDataIndex      = BottomRowPos + 1
 .label BottomCurrent        = BottomDataIndex + 1
 .label BottomRowCounter     = BottomCurrent + 1
+
+.label TopCounter        = BottomRowCounter + 1
+.label TopRowPos         = TopCounter + 1
+.label TopDataIndex      = TopRowPos + 1
+.label TopCurrent        = TopDataIndex + 1
+.label TopRowCounter     = TopCurrent + 1
+.label SurfaceTargetsIndex = TopRowCounter + 1
+
+
+.const RocketChar       = 30
+.const ShipChar         = 94
+.const FuelChar         = 81
