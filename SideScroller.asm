@@ -3,6 +3,10 @@
 
 BasicUpstart2(start)
 
+#import "Ship.asm"
+#import "Bullet.asm"
+#import "Bombs.asm"
+
 start:
     lda #0
     sta BottomDataIndex
@@ -11,11 +15,30 @@ start:
     sta TopDataIndex
     sta TopRowPos
     sta TopCounter
+    sta AreWeDeadYet
+
+    lda #1
+    sta ShipXValue
+    lda #6
+    sta ShipYValue
+
+    jsr SetUpSystem
 
 GameLoop:
-    jsr SetUpSystem
+    jsr RemoveBombsFromScreen
+    jsr RemoveBulletsFromScreen
+    jsr RemoveShipFromScreen
+    jsr ChangeShipsPosition
+    jsr ChangeBulletsPosition
+    jsr CheckBulletCollision
+    jsr ChangeBombsPosition
+    jsr CheckBombCollision
     jsr ScrollScreen
+    jsr PlaceShipToScreen
+    jsr PlaceBulletToScreen
+    jsr PlaceBombToScreen
     jsr BuildScene
+    jsr ShipControl
     ldy #50
 !Outer:
     ldx #255
@@ -30,6 +53,20 @@ SetUpSystem:
     lda VIC_SCROLX
     and #%11110111
     sta VIC_SCROLX
+
+    ldx #MaxNoOfBullets - 1
+    lda #128
+!BulletLoop:
+    sta BulletXArray,x
+    dex
+    bpl !BulletLoop-
+
+    ldx #MaxNoOfBombs - 1
+    lda #128
+!BombLoop:
+    sta BombXArray,x
+    dex
+    bpl !BombLoop-
     rts
 
 
