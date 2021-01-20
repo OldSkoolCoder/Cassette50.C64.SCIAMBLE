@@ -11,11 +11,16 @@
 .label MaxNoOfBombs         = 3
 .label BombXArray           = BulletYArray + MaxNoOfBullets
 .label BombYArray           = BombXArray + MaxNoOfBombs
-.label NexVar               = BombYArray + MaxNoOfBombs
+.label MaxNoOfRockets       = 5
+.label RocketXArray         = BombYArray + MaxNoOfBombs
+.label RocketYArray         = RocketXArray + MaxNoOfBombs
+.label NextVar              = RocketYArray + MaxNoOfRockets
 
 
 .label RowScreenLocationHi  = $D9
 .label RowScreenLocationLo  = $ECF0
+.label ScoreLoc             = $0409
+.label FuelGaugeStart       = $042F
 
 .label zpScreenLocLo        = $C1
 .label zpColourLocLo        = $C3
@@ -39,8 +44,26 @@
 .label ShipYDeltaValue   = ShipXDeltaValue + 1
 .label ShipInputControl  = ShipYDeltaValue + 1
 .label AreWeDeadYet      = ShipInputControl + 1
+.label ShipsRemaining    = AreWeDeadYet + 1
+.label Level             = ShipsRemaining + 1
+.label Score             = Level + 1
+.label FuelTank          = Score + 3
 
 
 .const RocketChar       = 30
 .const ShipChar         = 94
 .const FuelChar         = 81
+
+
+txtScoringLine:
+    .byte 1,0  // X,Y
+    .text "SCORE: 000000  HI: 000000 LV: 00 SH:00"
+    .byte 0
+
+txtFuelLine:
+    .byte 1,1
+    .text "FUEL:"
+    .byte 0
+
+XBarCharacters:
+    .byte 32,101,116,117,97,246,234,231,160

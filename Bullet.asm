@@ -1,5 +1,7 @@
+#importonce
 #import "C64Constants.asm"
 #import "Memory.asm"
+#import "Utils.asm"
 
 // TODO: Check For Collision Detection on Bullets
 
@@ -119,17 +121,31 @@ CheckLocationForPoints:
     lda (zpScreenLocLo),y
     cmp #30                 // Rocket
     bne !NotTheRocket+
-    jmp !CleanExit+
+    lda #$00
+    ldy #$01
+    jsr AddingScore
+    jmp !NotTheSpace+
 
 !NotTheRocket:
     cmp #94
     bne !NotTheShips+
-    jmp !CleanExit+
+    lda #$50
+    ldy #$00
+    jsr AddingScore
+    jmp !NotTheSpace+
 
 !NotTheShips:
     cmp #81
     bne !NotTheFuel+
-    jmp !CleanExit+
+    lda #24
+    clc
+    adc FuelTank
+    sta FuelTank
+    bcc !Exit+
+    lda #248
+    sta FuelTank
+!Exit:
+    jmp !NotTheSpace+
 
 !NotTheFuel:
     cmp #32
@@ -147,21 +163,3 @@ CheckLocationForPoints:
 
 
 
-
-//     ldx ShipYValue
-//     jsr GetScreenRowLocation
-//     ldy ShipXValue
-//     lda (zpScreenLocLo),y
-//     iny
-//     ora (zpScreenLocLo),y
-//     iny
-//     ora (zpScreenLocLo),y
-//     iny
-//     ora (zpScreenLocLo),y 
-//     and #%11011111
-//     beq !Exit+
-//     lda #128
-//     sta AreWeDeadYet
-
-// !Exit:
-//     rts

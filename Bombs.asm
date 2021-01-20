@@ -1,5 +1,7 @@
+#importonce
 #import "C64Constants.asm"
 #import "Memory.asm"
+#import "Bullet.asm"
 
 // TODO: Check For Collision Detection on Bombs
 

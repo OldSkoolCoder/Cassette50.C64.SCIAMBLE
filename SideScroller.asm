@@ -1,13 +1,23 @@
 #import "C64Constants.asm"
-#import "Memory.asm"
 
 BasicUpstart2(start)
 
+#import "Memory.asm"
 #import "Ship.asm"
 #import "Bullet.asm"
 #import "Bombs.asm"
+#import "Utils.asm"
+#import "Rocket.asm"
 
 start:
+    jsr $E544
+
+    lda #<txtScoringLine
+    ldy #>txtScoringLine
+    jsr PrintAtPoint
+    lda #<txtFuelLine
+    ldy #>txtFuelLine
+    jsr PrintAtPoint
     lda #0
     sta BottomDataIndex
     sta BottomRowPos
@@ -16,29 +26,47 @@ start:
     sta TopRowPos
     sta TopCounter
     sta AreWeDeadYet
+    sta Score
+    sta Score + 1
+    sta Score + 2
 
     lda #1
     sta ShipXValue
     lda #6
     sta ShipYValue
+    lda #248
+    sta FuelTank
 
     jsr SetUpSystem
 
 GameLoop:
+    jsr RemoveRocketsFromScreen
     jsr RemoveBombsFromScreen
     jsr RemoveBulletsFromScreen
     jsr RemoveShipFromScreen
     jsr ChangeShipsPosition
     jsr ChangeBulletsPosition
-    jsr CheckBulletCollision
+    jsr ChangeRocketsPosition
     jsr ChangeBombsPosition
-    jsr CheckBombCollision
+    jsr CheckBulletCollision
     jsr ScrollScreen
+    jsr CheckBombCollision
     jsr PlaceShipToScreen
+    jsr ScanForRockets
     jsr PlaceBulletToScreen
     jsr PlaceBombToScreen
+    jsr CheckRocketCollision
+    jsr PlaceRocketToScreen
     jsr BuildScene
     jsr ShipControl
+    jsr DisplayScore
+    jsr ShowXBar
+    dec FuelTank
+    bne !NotDead+
+    lda #128
+    sta AreWeDeadYet
+    inc FuelTank
+!NotDead:
     ldy #50
 !Outer:
     ldx #255
@@ -67,6 +95,15 @@ SetUpSystem:
     sta BombXArray,x
     dex
     bpl !BombLoop-
+
+    ldx #MaxNoOfRockets - 1
+    lda #128
+!RocketLoop:
+    sta RocketXArray,x
+    dex
+    bpl !RocketLoop-
+
+    jsr InitXBar
     rts
 
 
