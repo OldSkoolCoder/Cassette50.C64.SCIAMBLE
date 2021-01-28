@@ -29,6 +29,7 @@
 .label SCREENRAM       = $0400
 .label COLORRAM        = $D800
 .label SPRITE0         = $07F8
+.label COLOURRAMOFFSET  = $D400
 
 // $0801
 // Game code is placed here by using the *=$0801 directive 
@@ -278,3 +279,4 @@
 .const CHR_Yellow                  = 158
 .const CHR_Cyan                    = 159
 .const CHR_ShiftSpace              = 160
+.const CHR_LightBlue               = 154

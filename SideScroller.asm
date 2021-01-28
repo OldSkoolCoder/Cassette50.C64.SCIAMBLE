@@ -8,66 +8,56 @@ BasicUpstart2(start)
 #import "Bombs.asm"
 #import "Utils.asm"
 #import "Rocket.asm"
+#import "SID.asm"
 
 start:
-    jsr $E544
+*=* "Game Code"
+NewGame:
+    jsr SetUpSystem
 
-    lda #<txtScoringLine
-    ldy #>txtScoringLine
-    jsr PrintAtPoint
-    lda #<txtFuelLine
-    ldy #>txtFuelLine
-    jsr PrintAtPoint
+    jsr SessionSetUp
+    jsr Utils.DisplayShipsRemaining
+
     lda #0
-    sta BottomDataIndex
-    sta BottomRowPos
-    sta BottomCounter
-    sta TopDataIndex
-    sta TopRowPos
-    sta TopCounter
     sta AreWeDeadYet
     sta Score
     sta Score + 1
     sta Score + 2
 
-    lda #1
-    sta ShipXValue
-    lda #6
-    sta ShipYValue
-    lda #248
-    sta FuelTank
-
-    jsr SetUpSystem
-
 GameLoop:
-    jsr RemoveRocketsFromScreen
-    jsr RemoveBombsFromScreen
-    jsr RemoveBulletsFromScreen
-    jsr RemoveShipFromScreen
-    jsr ChangeShipsPosition
-    jsr ChangeBulletsPosition
-    jsr ChangeRocketsPosition
-    jsr ChangeBombsPosition
-    jsr CheckBulletCollision
+    jsr Rocket.RemoveFromScreen
+    jsr Bomb.RemoveFromScreen
+    jsr Bullet.RemoveFromScreen
+    jsr Ship.RemoveFromScreen
+
+    jsr Ship.ChangePosition
+    jsr Bullet.ChangePosition
+    jsr Rocket.ChangePosition
+    jsr Bomb.ChangePosition
+
+    jsr Bullet.CheckCollision
     jsr ScrollScreen
-    jsr CheckBombCollision
-    jsr PlaceShipToScreen
-    jsr ScanForRockets
-    jsr PlaceBulletToScreen
-    jsr PlaceBombToScreen
-    jsr CheckRocketCollision
-    jsr PlaceRocketToScreen
+    jsr Bomb.CheckCollision
+    jsr Ship.CheckPosition
+    jsr Ship.PlaceToScreen
+    jsr Rocket.Scan
+
+    jsr Bullet.PlaceToScreen
+    jsr Bomb.PlaceToScreen
+    jsr Rocket.CheckCollision
+    jsr Rocket.PlaceToScreen
+
     jsr BuildScene
-    jsr ShipControl
-    jsr DisplayScore
-    jsr ShowXBar
+    jsr Ship.Control
+    jsr Utils.DisplayScore
+    jsr Utils.ShowXBar
     dec FuelTank
     bne !NotDead+
     lda #128
     sta AreWeDeadYet
-    inc FuelTank
+    //inc FuelTank
 !NotDead:
-    ldy #50
+    ldy #80
 !Outer:
     ldx #255
 !Loop:
@@ -75,52 +65,137 @@ GameLoop:
     bne !Loop-
     dey
     bne !Outer-
+    lda AreWeDeadYet
+    bmi WeDied
     jmp GameLoop
+
+WeDied:
+    jsr SID.ShipExplosionSFX
+    jsr Ship.Explode
+    jsr SID.TurnOffVoice1
+    jsr SID.TurnOffVoice2
+    //jsr TurnOffVoice3 
+    dec ShipsRemaining
+    beq !NoMoreShips+
+    lda #<txtGameOver2
+    ldy #>txtGameOver2
+    jsr Utils.PrintAtPoint
+FireButtonTest:
+    // lda CIAPRA
+    // eor #$FF                // Inverts the Bits
+    // and #%00011111          // Mask Off only important Bits
+    // and #joystickFire
+    // cmp #joystickFire
+    lda krljmpLSTX
+    cmp #scanCode_SPACEBAR
+    bne FireButtonTest
+
+    jsr SessionSetUp
+    jsr Utils.DisplayShipsRemaining
+    //lda #0
+    //sta AreWeDeadYet
+    asl AreWeDeadYet
+
+    jmp GameLoop
+
+!NoMoreShips:
+    lda #<txtGameOver
+    ldy #>txtGameOver
+    jsr Utils.PrintAtPoint
+    lda #<txtGameOver2
+    ldy #>txtGameOver2
+    jsr Utils.PrintAtPoint
+FireButtonTestAgain:
+    lda krljmpLSTX
+    cmp #scanCode_SPACEBAR
+    bne FireButtonTestAgain
+    jmp NewGame
 
 SetUpSystem:
     lda VIC_SCROLX
     and #%11110111
     sta VIC_SCROLX
 
+    lda #4
+    sta ShipsRemaining
+
+    lda #BLUE
+    sta VIC_EXTCOL
+
+    lda #15
+    jsr SID.SetVolume
+    rts
+
+SessionSetUp:
+    jsr $E544
+
+    lda #<txtScoringLine
+    ldy #>txtScoringLine
+    jsr Utils.PrintAtPoint
+    //lda #<txtFuelLine
+    //ldy #>txtFuelLine
+    //jsr Utils.PrintAtPoint
+
+    jsr Utils.InitXBar
+
+    lda #0
+    sta BottomDataIndex
+    //sta BottomRowPos
+    sta BottomCounter
+    sta TopDataIndex
+    //sta TopRowPos
+    sta TopCounter
+
     ldx #MaxNoOfBullets - 1
     lda #128
 !BulletLoop:
     sta BulletXArray,x
+    sta RocketXArray,x
+    sta BombXArray,x
     dex
     bpl !BulletLoop-
 
-    ldx #MaxNoOfBombs - 1
-    lda #128
-!BombLoop:
-    sta BombXArray,x
-    dex
-    bpl !BombLoop-
+//     ldx #MaxNoOfBombs - 1
+// //    lda #128
+// !BombLoop:
+//     sta BombXArray,x
+//     dex
+//     bpl !BombLoop-
 
-    ldx #MaxNoOfRockets - 1
-    lda #128
-!RocketLoop:
-    sta RocketXArray,x
-    dex
-    bpl !RocketLoop-
+//     ldx #MaxNoOfRockets - 1
+// //    lda #128
+// !RocketLoop:
+//     sta RocketXArray,x
+//     dex
+//     bpl !RocketLoop-
 
-    jsr InitXBar
-    rts
+    lda #6
+    sta ShipYValue
+    lda #248
+    sta FuelTank
+    ldy #1
+    sty ShipXValue
+    dey
+    //lda #0
+    sty ShipXDeltaValue
+    sty ShipYDeltaValue
 
+    jsr ResetBottomLocator
+    // lda #<BottomGround
+    // sta BGLoc
+    // lda #>BottomGround
+    // sta BGLoc + 1
+    jmp ResetTopLocator
+    // lda #<TopGround
+    // sta TGLoc
+    // lda #>TopGround
+    // sta TGLoc + 1
+    //rts
 
 ScrollScreen:
     ldx #2
 RowLooper:
-    // lda RowScreenLocationHi,x
-    // and #%00001111
-    // sta zpScreenLocLo + 1
-    // clc
-    // adc #$D4
-    // sta zpColourLocLo + 1
-    // lda RowScreenLocationLo,x
-    // sta zpScreenLocLo
-    // sta zpColourLocLo
     jsr GetScreenRowLocation
-
 
     ldy #1
 ColLooper:
@@ -160,18 +235,18 @@ BottomGround:
 
 TopGround:
     // Level 1
-    .byte %00001000
-    .byte %10000000
-
-    // .byte %00011000
-    // .byte %00001101
-    // .byte %00001111
-    // .byte %00001101
-    // .byte %00001110
-    // .byte %00001111
-    // .byte %00011101
-    // .byte %00001110
+    // .byte %00001000
     // .byte %10000000
+
+    .byte %00010000
+    .byte %00001101
+    .byte %00001111
+    .byte %00001101
+    .byte %00001110
+    .byte %00001111
+    .byte %00011101
+    .byte %00001110
+    .byte %10000000
 
 SurfaceTargetCycle:
     .byte RocketChar,ShipChar,FuelChar,FuelChar,ShipChar,RocketChar,FuelChar,FuelChar
@@ -199,8 +274,8 @@ BuildScene:
     jsr BuildBottomScene
     jsr BottomDraw
     jsr BuildTopScene
-    jsr TopDraw
-    rts
+    jmp TopDraw
+    //rts
 
 BuildBottomScene:
     lda BottomCounter
@@ -210,73 +285,58 @@ BuildBottomScene:
 BuildBottomStart:
     lda BGLoc: BottomGround
     sta BottomCurrent
-
-    clc
-    lda BGLoc
-    adc #1
-    sta BGLoc
-    bcc !ByPassInc+
+    and #%01111100
+    lsr
+    lsr
+    sta BottomCounter
+    // clc
+    // lda BGLoc
+    // adc #1
+    // sta BGLoc
+    // bcc !ByPassInc+
+    inc BGLoc
+    bne !ByPassInc+
     inc BGLoc + 1
 !ByPassInc:
     lda BottomCurrent
     bpl !Continue+
-    lda #<BottomGround
-    sta BGLoc
-    lda #>BottomGround
-    sta BGLoc + 1
+    jsr ResetBottomLocator
+    // lda #<BottomGround
+    // sta BGLoc
+    // lda #>BottomGround
+    // sta BGLoc + 1
     jmp BuildBottomScene
 
 !Continue:
     and #%00000011
     cmp #%00000000
-    bne !PossibleStay+
-    lda BottomCurrent 
-    and #%01111100
-    lsr
-    lsr
+    bne !Exit+
+    lda BottomCounter 
     sta BottomRowPos
     lda #1
-    jmp !StoreBottomCounter+
-
-!PossibleStay:
-    cmp #%00000001
-    bne !PossibleUp+
-    lda BottomCurrent
-    and #%01111100
-    lsr
-    lsr
-    jmp !StoreBottomCounter+
-
-!PossibleUp:    
-    cmp #%00000010
-    bne !PossibleDown+
-    lda BottomCurrent
-    and #%01111100
-    lsr
-    lsr
-    jmp !StoreBottomCounter+
-
-!PossibleDown:
-    lda BottomCurrent
-    and #%01111100
-    lsr
-    lsr
-
-!StoreBottomCounter:
     sta BottomCounter
-    //jmp BottomDraw
+
+!Exit:
+    rts
+
+ResetBottomLocator:
+    lda #<BottomGround
+    sta BGLoc
+    lda #>BottomGround
+    sta BGLoc + 1
     rts
 
 BottomDraw:
+    lda #RED
+    sta PillarColour
+    lda #24
+    sta PillarXStart
+    lda #$CA                // DEX Instruction
+    sta LocationOfDEX_INX
     lda BottomCurrent
     and #%00000011
     cmp #%00000000
     bne DrawBottomStay
-    lda BottomCurrent
-    and #%01111100
-    lsr
-    lsr
-    sta BottomRowPos
     jmp !DrawBottomStayExecute+
 
 DrawBottomStay:
@@ -284,7 +344,9 @@ DrawBottomStay:
     bne DrawBottomUp
 !DrawBottomStayExecute:
     lda #160 //#227
-    jsr DrawBottomPillar
+    ldy BottomRowPos
+    jsr DrawPillar
+    jsr PlaceSurfaceAssets
     jmp DrawBottomUpdate
 
 DrawBottomUp:
@@ -292,12 +354,14 @@ DrawBottomUp:
     bne DrawBottomDown
     inc BottomRowPos
     lda #233        // Going Up Triangle
-    jsr DrawBottomPillar
+    ldy BottomRowPos
+    jsr DrawPillar
     jmp DrawBottomUpdate
 
 DrawBottomDown:
     lda #223        // Going Down Triangle
-    jsr DrawBottomPillar
+    ldy BottomRowPos
+    jsr DrawPillar
     dec BottomRowPos
     jmp DrawBottomUpdate
 
@@ -305,59 +369,41 @@ DrawBottomUpdate:
     dec BottomCounter
     rts
 
-DrawBottomPillar:
+DrawPillar:
     pha
+    sty PillarRowPos
     lda #0
     sta BottomRowCounter
-    ldx #24
+    ldx PillarXStart
 
 !RowLooper:
-    // lda RowScreenLocationHi,x
-    // and #%00001111
-    // sta zpScreenLocLo + 1
-    // clc
-    // adc #$D4
-    // sta zpColourLocLo + 1
-    // lda RowScreenLocationLo,x
-    // sta zpScreenLocLo
-    // sta zpColourLocLo
     jsr GetScreenRowLocation
 
     ldy #39
     lda #160
     sta (zpScreenLocLo),y
-    lda #RED
+    lda PillarColour
     sta (zpColourLocLo),y
 
-    dex
+LocationOfDEX_INX:
+    dex                 // dex or inx
     inc BottomRowCounter
     lda BottomRowCounter
-    cmp BottomRowPos
+    cmp PillarRowPos
     bne !RowLooper-
 
-    // lda RowScreenLocationHi,x
-    // and #%00001111
-    // sta zpScreenLocLo + 1
-    // clc
-    // adc #$D4
-    // sta zpColourLocLo + 1
-    // lda RowScreenLocationLo,x
-    // sta zpScreenLocLo
-    // sta zpColourLocLo
     jsr GetScreenRowLocation
 
     pla
-    pha
     ldy #39
     sta (zpScreenLocLo),y
-    lda #RED
+    lda PillarColour
     sta (zpColourLocLo),y
+    rts
 
+PlaceSurfaceAssets:
     dex
     jsr GetScreenRowLocation
-    pla
-    cmp #160
-    bne !ResetSurfaceTargetIndex+
     ldy SurfaceTargetsIndex
     lda SurfaceTargetColourCycle,y
     pha
@@ -403,73 +449,58 @@ BuildTopScene:
 BuildTopStart:
     lda TGLoc: TopGround
     sta TopCurrent
-
-    clc
-    lda TGLoc
-    adc #1
-    sta TGLoc
-    bcc !ByPassInc+
+    and #%01111100
+    lsr
+    lsr
+    sta TopCounter
+    // clc
+    // lda TGLoc
+    // adc #1
+    // sta TGLoc
+    // bcc !ByPassInc+
+    inc TGLoc
+    bne !ByPassInc+
     inc TGLoc + 1
 !ByPassInc:
     lda TopCurrent
     bpl !Continue+
-    lda #<TopGround
-    sta TGLoc
-    lda #>TopGround
-    sta TGLoc + 1
+    jsr ResetTopLocator
+    // lda #<TopGround
+    // sta TGLoc
+    // lda #>TopGround
+    // sta TGLoc + 1
     jmp BuildTopScene
 
 !Continue:
     and #%00000011
     cmp #%00000000
-    bne !PossibleStay+
-    lda TopCurrent 
-    and #%01111100
-    lsr
-    lsr
+    bne !Exit+
+    lda TopCounter 
     sta TopRowPos
     lda #1
-    jmp !StoreTopCounter+
-
-!PossibleStay:
-    cmp #%00000001
-    bne !PossibleUp+
-    lda TopCurrent
-    and #%01111100
-    lsr
-    lsr
-    jmp !StoreTopCounter+
-
-!PossibleUp:    
-    cmp #%00000010
-    bne !PossibleDown+
-    lda TopCurrent
-    and #%01111100
-    lsr
-    lsr
-    jmp !StoreTopCounter+
-
-!PossibleDown:
-    lda TopCurrent
-    and #%01111100
-    lsr
-    lsr
-
-!StoreTopCounter:
     sta TopCounter
-    //jmp TopDraw
+
+!Exit:
+    rts
+
+ResetTopLocator:
+    lda #<TopGround
+    sta TGLoc
+    lda #>TopGround
+    sta TGLoc + 1
     rts
 
 TopDraw:
+    lda #GREEN
+    sta PillarColour
+    lda #2
+    sta PillarXStart
+    lda #$E8                // INX Instruction
+    sta LocationOfDEX_INX
     lda TopCurrent
     and #%00000011
     cmp #%00000000
     bne DrawTopStay
-    lda TopCurrent
-    and #%01111100
-    lsr
-    lsr
-    sta TopRowPos
     jmp !DrawTopStayExecute+
 
 DrawTopStay:
@@ -477,71 +508,27 @@ DrawTopStay:
     bne DrawTopUp
 !DrawTopStayExecute:
     lda #160 //#228
-    jsr DrawTopPillar
+    ldy TopRowPos
+    jsr DrawPillar
     jmp DrawTopUpdate
 
 DrawTopUp:
     cmp #%00000010
     bne DrawTopDown
     lda #105        // Going Up Triangle
-    jsr DrawTopPillar
+    ldy TopRowPos
+    jsr DrawPillar
     dec TopRowPos
     jmp DrawTopUpdate
 
 DrawTopDown:
     inc TopRowPos
     lda #95        // Going Down Triangle
-    jsr DrawTopPillar
+    ldy TopRowPos
+    jsr DrawPillar
     jmp DrawTopUpdate
 
 DrawTopUpdate:
     dec TopCounter
     rts
 
-DrawTopPillar:
-    pha
-    lda #0
-    sta TopRowCounter
-    ldx #2
-
-!RowLooper:
-    // lda RowScreenLocationHi,x
-    // and #%00001111
-    // sta zpScreenLocLo + 1
-    // clc
-    // adc #$D4
-    // sta zpColourLocLo + 1
-    // lda RowScreenLocationLo,x
-    // sta zpScreenLocLo
-    // sta zpColourLocLo
-    jsr GetScreenRowLocation
-
-    ldy #39
-    lda #160
-    sta (zpScreenLocLo),y
-    lda #GREEN
-    sta (zpColourLocLo),y
-
-    inx
-    inc TopRowCounter
-    lda TopRowCounter
-    cmp TopRowPos
-    bne !RowLooper-
-
-    // lda RowScreenLocationHi,x
-    // and #%00001111
-    // sta zpScreenLocLo + 1
-    // clc
-    // adc #$D4
-    // sta zpColourLocLo + 1
-    // lda RowScreenLocationLo,x
-    // sta zpScreenLocLo
-    // sta zpColourLocLo
-    jsr GetScreenRowLocation
-
-    pla
-    ldy #39
-    sta (zpScreenLocLo),y
-    lda #GREEN
-    sta (zpColourLocLo),y
-    rts

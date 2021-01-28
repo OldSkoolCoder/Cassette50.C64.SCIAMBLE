@@ -3,129 +3,117 @@
 #import "Memory.asm"
 #import "Bullet.asm"
 
-// TODO: Check For Collision Detection on Bombs
+*=* "BombCode"
+.namespace Bomb 
+{
+    RemoveFromScreen:
+        ldx #MaxNoOfBombs - 1
 
-RemoveBombsFromScreen:
-    ldx #MaxNoOfBombs - 1
+    !BombLooper:
+        txa
+        pha
+        lda BombXArray,x
+        bmi !NoBombFound+
+        pha
+        lda BombYArray,x
+        tax
+        jsr GetScreenRowLocation
+        pla
+        tay
+        lda #32
+        sta (zpScreenLocLo),y
+        lda #0
+        sta (zpColourLocLo),y
 
-!BombLooper:
-    txa
-    pha
-    lda BombXArray,x
-    bmi !NoBombFound+
-    pha
-    lda BombYArray,x
-    tax
-    jsr GetScreenRowLocation
-    pla
-    tay
-    lda #32
-    sta (zpScreenLocLo),y
-    lda #0
-    sta (zpColourLocLo),y
+    !NoBombFound:
+        pla
+        tax
+        dex
+        bpl !BombLooper-
+        rts
 
-!NoBombFound:
-    pla
-    tax
-    dex
-    bpl !BombLooper-
-    rts
+    PlaceToScreen:
+        lda #128
+        sta BombActive
+        ldx #MaxNoOfBombs - 1
 
-PlaceBombToScreen:
-    ldx #MaxNoOfBombs - 1
+    !BombLooper:
+        txa
+        pha
+        lda BombXArray,x
+        bmi !NoBombFound+
+        pha
+        lda #0
+        sta BombActive
+        lda BombYArray,x
+        tax
+        jsr SID.BombSFX
+        jsr GetScreenRowLocation
+        pla
+        tay
+        lda #42
+        sta (zpScreenLocLo),y
+        lda #PURPLE
+        sta (zpColourLocLo),y
 
-!BombLooper:
-    txa
-    pha
-    lda BombXArray,x
-    bmi !NoBombFound+
-    pha
-    lda BombYArray,x
-    tax
-    jsr GetScreenRowLocation
-    pla
-    tay
-    lda #42
-    sta (zpScreenLocLo),y
-    lda #PURPLE
-    sta (zpColourLocLo),y
+    !NoBombFound:
+        pla
+        tax
+        dex
+        bpl !BombLooper-
+        lda BombActive
+        bpl !Exit+
+        jsr SID.TurnOffVoice1
+    !Exit:
+        rts
 
-!NoBombFound:
-    pla
-    tax
-    dex
-    bpl !BombLooper-
-    rts
+    ChangePosition:
+        ldx #MaxNoOfBombs - 1
 
-ChangeBombsPosition:
-    ldx #MaxNoOfBombs - 1
+    !BombLooper:
+        lda BombXArray,x
+        bmi !NoBombFound+
+        lda BombYArray,x
+        cmp #24
+        bne !StillActive+
+        lda #128
+        sta BombXArray,x
+        bmi !NoBombFound+
 
-!BombLooper:
-    lda BombXArray,x
-    bmi !NoBombFound+
-    lda BombYArray,x
-    cmp #24
-    bne !StillActive+
-    lda #128
-    sta BombXArray,x
-    bmi !NoBombFound+
+    !StillActive:
+        inc BombYArray,x
 
-!StillActive:
-    inc BombYArray,x
+    !NoBombFound:
+        dex
+        bpl !BombLooper-
+        rts
 
-!NoBombFound:
-    dex
-    bpl !BombLooper-
-    rts
+    CheckCollision:
+        ldx #MaxNoOfBombs - 1
 
+    !BombLooper:
+        txa
+        pha
+        lda BombXArray,x
+        bmi !NoBombFound+
+        pha
+        lda BombYArray,x
+        tay
+        pla
+        tax
+        jsr Bullet.CheckLocationForPoints
+        bcc !NoBombFound+
+        pla
+        pha
+        tax
+        lda #128
+        sta BombXArray,x
 
-CheckBombCollision:
-    ldx #MaxNoOfBombs - 1
+    !NoBombFound:
+        pla
+        tax
+        dex
+        bpl !BombLooper-
+        rts    
+}
 
-!BombLooper:
-    txa
-    pha
-    lda BombXArray,x
-    bmi !NoBombFound+
-    pha
-    lda BombYArray,x
-    tay
-    pla
-    tax
-    jsr CheckLocationForPoints
-    bcc !NoBombFound+
-    pla
-    pha
-    tax
-    lda #128
-    sta BombXArray,x
-
-!NoBombFound:
-    pla
-    tax
-    dex
-    bpl !BombLooper-
-    rts
-
-
-
-
-
-
-//     ldx ShipYValue
-//     jsr GetScreenRowLocation
-//     ldy ShipXValue
-//     lda (zpScreenLocLo),y
-//     iny
-//     ora (zpScreenLocLo),y
-//     iny
-//     ora (zpScreenLocLo),y
-//     iny
-//     ora (zpScreenLocLo),y 
-//     and #%11011111
-//     beq !Exit+
-//     lda #128
-//     sta AreWeDeadYet
-
-// !Exit:
-//     rts
