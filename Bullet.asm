@@ -2,6 +2,7 @@
 #import "C64Constants.asm"
 #import "Memory.asm"
 #import "Utils.asm"
+#import "SID.asm"
 
 *=* "Bullet Code"
 .namespace Bullet 
@@ -17,7 +18,7 @@
         pha
         lda BulletYArray,x
         tax
-        jsr GetScreenRowLocation
+        jsr Utils.GetScreenRowLocation
         pla
         tay
         lda #32
@@ -48,7 +49,7 @@
         lda BulletYArray,x
         tax
         jsr SID.LaserSFX
-        jsr GetScreenRowLocation
+        jsr Utils.GetScreenRowLocation
         pla
         tay
         lda #67
@@ -121,7 +122,7 @@
         pha
         tya
         tax
-        jsr GetScreenRowLocation
+        jsr Utils.GetScreenRowLocation
         pla
         tay
         lda (zpScreenLocLo),y

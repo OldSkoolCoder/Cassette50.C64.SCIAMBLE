@@ -195,7 +195,7 @@ SessionSetUp:
 ScrollScreen:
     ldx #2
 RowLooper:
-    jsr GetScreenRowLocation
+    jsr Utils.GetScreenRowLocation
 
     ldy #1
 ColLooper:
@@ -377,7 +377,7 @@ DrawPillar:
     ldx PillarXStart
 
 !RowLooper:
-    jsr GetScreenRowLocation
+    jsr Utils.GetScreenRowLocation
 
     ldy #39
     lda #160
@@ -392,7 +392,7 @@ LocationOfDEX_INX:
     cmp PillarRowPos
     bne !RowLooper-
 
-    jsr GetScreenRowLocation
+    jsr Utils.GetScreenRowLocation
 
     pla
     ldy #39
@@ -403,7 +403,7 @@ LocationOfDEX_INX:
 
 PlaceSurfaceAssets:
     dex
-    jsr GetScreenRowLocation
+    jsr Utils.GetScreenRowLocation
     ldy SurfaceTargetsIndex
     lda SurfaceTargetColourCycle,y
     pha
@@ -426,19 +426,6 @@ PlaceSurfaceAssets:
 !ResetSurfaceTargetIndex:
     lda #0
     sta SurfaceTargetsIndex
-    rts
-
-GetScreenRowLocation:
-// Input : XReg = Row #
-    lda RowScreenLocationHi,x
-    and #%00001111
-    sta zpScreenLocLo + 1
-    clc
-    adc #$D4
-    sta zpColourLocLo + 1
-    lda RowScreenLocationLo,x
-    sta zpScreenLocLo
-    sta zpColourLocLo
     rts
 
 BuildTopScene:

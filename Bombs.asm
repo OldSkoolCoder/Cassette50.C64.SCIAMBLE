@@ -2,6 +2,7 @@
 #import "C64Constants.asm"
 #import "Memory.asm"
 #import "Bullet.asm"
+#import "SID.asm"
 
 *=* "BombCode"
 .namespace Bomb 
@@ -17,7 +18,7 @@
         pha
         lda BombYArray,x
         tax
-        jsr GetScreenRowLocation
+        jsr Utils.GetScreenRowLocation
         pla
         tay
         lda #32
@@ -48,7 +49,7 @@
         lda BombYArray,x
         tax
         jsr SID.BombSFX
-        jsr GetScreenRowLocation
+        jsr Utils.GetScreenRowLocation
         pla
         tay
         lda #42

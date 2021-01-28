@@ -1,13 +1,14 @@
 #import "C64Constants.asm"
 #import "Memory.asm"
 #import "GameConsts.asm"
+#import "Utils.asm"
 
 *=* "Ship Code"
 .namespace Ship
 {
     RemoveFromScreen:
         ldx ShipYValue
-        jsr GetScreenRowLocation
+        jsr Utils.GetScreenRowLocation
         ldy ShipXValue
         lda #32
         sta (zpScreenLocLo),y
@@ -31,7 +32,7 @@
 
     PlaceToScreen:
         ldx ShipYValue
-        jsr GetScreenRowLocation
+        jsr Utils.GetScreenRowLocation
         ldy ShipXValue
         lda #SHIPBYTE1
         sta (zpScreenLocLo),y
@@ -70,7 +71,7 @@
         sta ShipYDeltaValue
 
         ldx ShipYValue
-        jsr GetScreenRowLocation
+        jsr Utils.GetScreenRowLocation
         ldy ShipXValue
         lda (zpScreenLocLo),y
         iny
@@ -201,7 +202,7 @@
 
     Explode:
         ldx ShipYValue
-        jsr GetScreenRowLocation
+        jsr Utils.GetScreenRowLocation
         ldy ShipXValue
         ldx #3
     !Loop:
@@ -216,7 +217,7 @@
 
     CheckPosition:
         ldx ShipYValue
-        jsr GetScreenRowLocation
+        jsr Utils.GetScreenRowLocation
         ldy ShipXValue
         iny
         iny

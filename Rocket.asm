@@ -3,6 +3,7 @@
 #import "Memory.asm"
 #import "Utils.asm"
 #import "GameConsts.asm"
+#import "SID.asm"
 
 *=* "Rockets"
 .namespace Rocket
@@ -15,7 +16,7 @@
 
         ldx #24
     !RocketLooper:
-        jsr GetScreenRowLocation
+        jsr Utils.GetScreenRowLocation
         ldy ZeroPageTemp
         lda (zpScreenLocLo),y
         cmp #30
@@ -53,7 +54,7 @@
         pha
         lda RocketYArray,x
         tax
-        jsr GetScreenRowLocation
+        jsr Utils.GetScreenRowLocation
         pla
         tay
         lda #32
@@ -79,7 +80,7 @@
         pha
         lda RocketYArray,x
         tax
-        jsr GetScreenRowLocation
+        jsr Utils.GetScreenRowLocation
         pla
         tay
         lda #30
@@ -130,7 +131,7 @@
         pha
         tya
         tax
-        jsr GetScreenRowLocation
+        jsr Utils.GetScreenRowLocation
         pla
         tay
         lda (zpScreenLocLo),y

@@ -2,6 +2,7 @@
 
 #import "C64Constants.asm"
 #import "Memory.asm"
+#import "SID.asm"
 
 *=* "Utils Code"
 .namespace Utils
@@ -226,5 +227,19 @@
         //ora #$80
         sta FuelGaugeStart,y        // Blank out last location
         rts    
+
+    GetScreenRowLocation:
+    // Input : XReg = Row #
+        lda RowScreenLocationHi,x
+        and #%00001111
+        sta zpScreenLocLo + 1
+        clc
+        adc #$D4
+        sta zpColourLocLo + 1
+        lda RowScreenLocationLo,x
+        sta zpScreenLocLo
+        sta zpColourLocLo
+        rts
+
 }
 

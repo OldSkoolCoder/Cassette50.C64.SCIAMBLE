@@ -1,4 +1,5 @@
 #importonce
+#import "C64Constants.asm"
 
 *=* "Memory"
 // Arrays
