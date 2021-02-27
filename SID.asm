@@ -54,7 +54,8 @@
         rts
 
     TurnOffVoice1:
-        lda #0
+        lda SID_VCREG1
+        and %11111110
         sta SID_VCREG1
         rts
 
@@ -72,14 +73,15 @@
         rts
 
     TurnOffVoice2:
-        lda #0
+        lda SID_VCREG2
+        and %11111110
         sta SID_VCREG2
         rts
 
     WeaponExplosionSFX:
         ldy #3
         jsr SetUpVoice
-        lda #105
+        lda #203
         sta SID_SUREL3
         lda #145
         sta SID_FRELO3
@@ -90,22 +92,25 @@
         rts
 
     TurnOffVoice3:
-        lda #0
+        lda SID_VCREG3
+        and %11111110
         sta SID_VCREG3
         rts
 
     ShipExplosionSFX:
         ldy #3
         jsr SetUpVoice
-        lda #107
+        lda #$00
+        sta SID_ATDCY3
+        lda #$0B
         sta SID_SUREL3
         lda #145
         sta SID_FRELO3
         lda #01
         sta SID_FREHI3
-        lda #129
+        lda #$81
         sta SID_VCREG3
-        dec SID_VCREG3
+        //dec SID_VCREG3
         rts
 }
 

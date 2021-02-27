@@ -126,6 +126,10 @@
         pla
         tay
         lda (zpScreenLocLo),y
+        pha
+        lda #32
+        sta (zpScreenLocLo),y
+        pla
         cmp #30                 // Rocket
         bne !NotTheRocket+
         lda #$00
@@ -144,7 +148,6 @@
     !NotTheShips:
         cmp #81
         bne !NotTheFuel+
-        jsr SID.WeaponExplosionSFX
         lda #24
         clc
         adc FuelTank
@@ -162,6 +165,7 @@
         rts
 
     !NotTheSpace:
+        jsr SID.WeaponExplosionSFX
         sec
         rts   
 }

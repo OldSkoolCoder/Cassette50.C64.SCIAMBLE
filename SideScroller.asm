@@ -23,6 +23,7 @@ NewGame:
     sta Score
     sta Score + 1
     sta Score + 2
+    sta HardnessInterval
 
 GameLoop:
     jsr Rocket.RemoveFromScreen
@@ -67,6 +68,7 @@ GameLoop:
     bne !Outer-
     lda AreWeDeadYet
     bmi WeDied
+    jsr SID.TurnOffVoice3
     jmp GameLoop
 
 WeDied:
@@ -173,6 +175,8 @@ SessionSetUp:
     sta ShipYValue
     lda #248
     sta FuelTank
+    lda #120
+    sta HardnessDelay
     ldy #1
     sty ShipXValue
     dey

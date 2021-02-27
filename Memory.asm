@@ -56,6 +56,8 @@
 .label PillarRowPos     = PillarXStart + 1
 .label PillarColour     = PillarRowPos + 1
 .label BombActive       = PillarColour + 1
+.label HardnessInterval = BombActive + 1
+.label HardnessDelay    = HardnessInterval + 1
 
 .const RocketChar       = 30
 .const ShipChar         = 94
